@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actualizar Notificación</title>
+</head>
+<body>
+    <h1>Actualizar Notificación</h1>
+    <form id="form-notificacion">
+        <label for="notificacion">Nueva Notificación:</label>
+        <input type="text" id="notificacion" name="notificacion" required>
+        <button type="submit">Actualizar</button>
+    </form>
+    <div id="mensaje"></div>
+
+    <script>
+        const form = document.getElementById('form-notificacion');
+        const mensajeDiv = document.getElementById('mensaje');
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const notificacion = document.getElementById('notificacion').value;
+
+            fetch('http://localhost:3000/api/actualizar-notificacion', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ notificacion: notificacion })
+            })
+            .then(response => response.json())
+            .then(data => {
+                mensajeDiv.innerHTML = data.mensaje;
+            })
+            .catch(error => {
+                console.error('Error al actualizar notificación:', error);
+            });
+        });
+    </script>
+</body>
+</html>
