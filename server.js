@@ -1,36 +1,53 @@
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-let interacciones = 0;
-let notificacionActual = "No hay nuevas notificaciones.";
+// Middleware para servir archivos estáticos (como style.css)
+app.use(express.static('public'));
 
-// Middleware para servir archivos estáticos como HTML, CSS, y JS
-app.use(express.static(__dirname));
-
-// API para obtener notificaciones
+// Ruta para obtener las notificaciones en formato JSON
 app.get('/api/notificaciones', (req, res) => {
-    res.json({ mensaje: notificacionActual });
+    const filePath = path.join(__dirname, 'notificacion.json');
+
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error al leer el archivo notificacion.json:', err);
+            return res.status(500).json({ error: 'Error al leer la notificación.' });
+        }
+
+        try {
+            const notificacion = JSON.parse(data).notificacion;
+            res.json({ mensaje: notificacion });
+        } catch (jsonErr) {
+            console.error('Error al parsear el archivo JSON:', jsonErr);
+            res.status(500).json({ error: 'Error al procesar la notificación.' });
+        }
+    });
 });
 
-// API para registrar la interacción del usuario
-app.post('/api/registrar', (req, res) => {
-    interacciones += 1;
-    res.json({ mensaje: `Interacción registrada. Total: ${interacciones}` });
+// Ruta principal para mostrar el contenido en HTML
+app.get('/', (req, res) => {
+    const filePath = path.join(__dirname, 'notificacion.json');
+
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error al leer el archivo notificacion.json:', err);
+            return res.status(500).send('Error al leer la notificación.');
+        }
+
+        try {
+            const notificacion = JSON.parse(data).notificacion;
+            res.send(`<h1>Notificación actual: ${notificacion}</h1>`);
+        } catch (jsonErr) {
+            console.error('Error al parsear el archivo JSON:', jsonErr);
+            res.status(500).send('Error al procesar la notificación.');
+        }
+    });
 });
 
 // Iniciar el servidor
 app.listen(port, () => {
-    console.log(`Servidor escuchando en http://localhost:${port}`);
-});
-
-// nueva notificacion
-app.post('/api/actualizar-notificacion', express.json(), (req, res) => {
-    const nuevaNotificacion = req.body.notificacion;
-    if (nuevaNotificacion) {
-        notificacionActual = nuevaNotificacion;
-        res.json({ mensaje: 'Notificación actualizada correctamente.' });
-    } else {
-        res.status(400).json({ mensaje: 'Error: Notificación no proporcionada.' });
-    }
+    console.log(`Servidor corriendo en el puerto ${port}`);
 });
